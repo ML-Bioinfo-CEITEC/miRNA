@@ -1,10 +1,11 @@
-# miRNA
+# ago2:miRNA to mRNA binding
 
-## Running the pipeline:
+### 
 
-### 1a) Create conda env from spec-file.txt
-https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#building-identical-conda-environments
+#### 1. Set up the environment 
+a) Create [conda env from](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#building-identical-conda-environments) `spec-file.txt`
 
-### OR 1b) If you prefere pip, use requirements.txt
+b) *OR* If you prefer pip, use `requirements.txt`
 
-### 2) run preprocess_binding_sites.ipynb step by step to understand the big picture of the pipeline
+#### 2. Running the pipeline 
+Go through `pipeline_simpleCNN.ipynb` step by step to understand the pipeline in the big picture
