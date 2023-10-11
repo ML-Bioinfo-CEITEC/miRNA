@@ -8,4 +8,4 @@ a) Create [conda env from](https://conda.io/projects/conda/en/latest/user-guide/
 b) *OR* If you prefer pip, use `requirements.txt`
 
 #### 2. Running the pipeline 
-Go through `pipeline_simpleCNN.ipynb` step by step to understand the pipeline in the big picture
+Go through [`pipeline_simpleCNN.ipynb`](https://github.com/ML-Bioinfo-CEITEC/miRNA/blob/main/pipeline_simpleCNN.ipynb) step by step to understand the pipeline in the big picture
