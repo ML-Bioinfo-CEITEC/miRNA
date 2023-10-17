@@ -12,14 +12,7 @@ def rna_to_dna(rna_sample):
         'U':'T',
         'G':'G',
     }
-    converted = [rna_dic[x.upper()] for x in rna_sample]
-    new = ""
-    # traverse in the string
-    for x in converted:
-        new += x
-    # return string
-    return new
-
+    return [rna_dic[x.upper()] for x in rna_sample]
 
 def get_bratel_gene_fc(mirna_name):
     mirna_FCs = pd.read_csv('mirna_fcs.csv',index_col=0, header=0, sep=',')
