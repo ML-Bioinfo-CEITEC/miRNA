@@ -120,11 +120,11 @@ class Small_CNN(pl.LightningModule):
         }
 
     
-    # def predict_step(self, batch, batch_idx):
-    #     xs, ids = batch
-    #     logits = self.forward(xs)
-    #     # res = self.logits_to_probs(logits)
-    #     return logits, ids
+    def predict_step(self, batch, batch_idx):
+        xs, ids = batch
+        logits = self.forward(xs)
+        # res = self.logits_to_probs(logits)
+        return logits, ids
     
     def get_metrics(self, predictions, labels, exps):
         metrics = {}
