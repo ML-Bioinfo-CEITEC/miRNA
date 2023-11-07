@@ -2,7 +2,64 @@ import pandas as pd
 import numpy as np
 import torch
 import torchmetrics
+import os
 import warnings
+import datetime
+from pathlib import Path
+from math import ceil
+from collections.abc import Sequence
+
+
+def make_dir_with_parents(path):
+    path_obj = Path(os.path.dirname(path))
+    path_obj.mkdir(parents=True, exist_ok=True)
+    return path_obj
+
+
+def extend_path_by_suffix_before_filetype(
+    path,
+    suffix,
+):
+    path = os.path.normpath(path)
+    path = path.split(os.sep)
+    file = path[-1].split('.')
+    return os.path.join(*path[:-1], '.'.join(file[:-1]) + suffix + '.' + file[-1])
+
+
+def compress_zero_subsequences(arr):
+    if not isinstance(arr, (Sequence, np.ndarray)):
+    # np.isnan(arr)
+        return np.nan
+    if len(arr) == 0:
+        return []
+    
+    new_arr = []
+    zero_count = 0
+    
+    for num in arr:
+        if num == 0:
+            zero_count += 1
+        else:
+            if zero_count > 0:
+                new_arr.extend([0] * (ceil((zero_count / 100))))
+                zero_count = 0
+            new_arr.append(num)
+    
+    if zero_count > 0:
+        new_arr.extend([0] * (ceil((zero_count / 100))))
+    
+    return new_arr
+
+
+def check_empty_or_not_array(input_array):
+    return (not isinstance(input_array, (Sequence, np.ndarray))) or (len(input_array) == 0)
+
+
+def get_experiment_time_id(sufix=''):
+    return datetime.datetime.now().strftime("%d-%m-%y_%H-%M") + '.' + sufix
+
+
+
 
 
 def rna_to_dna(rna_sample):
@@ -12,7 +69,24 @@ def rna_to_dna(rna_sample):
         'U':'T',
         'G':'G',
     }
-    return [rna_dic[x.upper()] for x in rna_sample]
+    converted = [rna_dic[x.upper()] for x in rna_sample]
+    new = ""
+    # traverse in the string
+    for x in converted:
+        new += x
+    # return string
+    return new
+
+
+def get_our_miRNAs(as_DNA_string = False):
+    mirna_seqs = ['UAGCAGCACGUAAAUAUUGGCG', 'UAAAGUGCUGACAGUGCAGAU', 'UAACACUGUCUGGUAACGAUGU', 'UAAUACUGCCUGGUAAUGAUGA', 'AUGACCUAUGAAUUGACAGAC', 'UGAGGUAGUAGGUUGUAUGGUU', 'AGCAGCAUUGUACAGGGCUAUGA']
+    mirna_names = ['hsa-miR-16-5p', 'hsa-miR-106b-5p', 'hsa-miR-200a-3p', 'hsa-miR-200b-3p', 'hsa-miR-215-5p', 'hsa-let-7c-5p', 'hsa-miR-103a-3p']
+    if as_DNA_string:
+        mirna_seqs = [rna_to_dna(x) for x in mirna_seqs]
+    return pd.DataFrame(
+            {'mirna_name': mirna_names, 'mirna_sequence':mirna_seqs},
+        )
+
 
 def get_bratel_gene_fc(mirna_name):
     mirna_FCs = pd.read_csv('mirna_fcs.csv',index_col=0, header=0, sep=',')
@@ -23,7 +97,7 @@ def get_bratel_gene_fc(mirna_name):
     return mirna_FCs_dict
 
 
-def get_labels(mirna_name, padded_data_tensor, input_data_genes):
+def get_labels(mirna_name, input_data, input_data_genes):
     mirna_FCs = pd.read_csv('mirna_fcs.csv',index_col=0, header=0, sep=',')
     # mirna_FCs[['Gene symbol',my_miRNA_name]]
     
@@ -49,13 +123,13 @@ def get_labels(mirna_name, padded_data_tensor, input_data_genes):
             input_labels_unfiltered.append(0)
             gene_indices_to_remove.append(i)
             
-    print("There is ", len(not_found_genes), "genes for which we do not have fold change because they are not in the Bartel table, out of total", len(input_labels_unfiltered), "and", len(nan_genes), "nan valued genes in FC table")
+    print("We have predicted ", len(not_found_genes), "genes for which we do not have fold change because they are not in the Bartel table, out of total", len(input_labels_unfiltered), "and", len(nan_genes), "nan valued genes in FC table")
     
     for i in gene_indices_to_remove:
         input_labels_unfiltered[i] = "remove"
 
     input_labels =  [i for i in input_labels_unfiltered if i != "remove"]
-    result_data_tensor =  [padded_data_tensor[i] for i in range(len(input_labels_unfiltered)) if input_labels_unfiltered[i] != "remove"]
+    result_data_tensor =  [input_data[i] for i in range(len(input_labels_unfiltered)) if input_labels_unfiltered[i] != "remove"]
     input_data_genes_filtered = [input_data_genes[i] for i in range(len(input_labels_unfiltered)) if input_labels_unfiltered[i] != "remove"]
     
     return input_labels, result_data_tensor, input_data_genes_filtered

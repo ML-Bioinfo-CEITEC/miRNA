@@ -2,11 +2,39 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 import torch
 import pandas as pd
+import json
+from utils import get_our_miRNAs
+
+RANDOM_STATE = 42
+
+
+# returns a dataframe of miRNA, gene, signal
+def get_labeled_explainability_scores(mirna_name):
+    explainability_scores_path = "explainability_scores_{}.json".format(mirna_name)
+    with open(explainability_scores_path, 'r') as file:
+        miRNA_to_gene_to_signal = json.load(file)
+        
+    mirnas_df = get_our_miRNAs(as_DNA_string = True)
+    mirna_seq = mirnas_df[mirnas_df['mirna_name'] == mirna_name]['mirna_sequence'].item()    
+    
+    for x in miRNA_to_gene_to_signal[mirna_seq]:
+        x.insert(0, mirna_name)
+    
+    gene_and_signal = pd.DataFrame(miRNA_to_gene_to_signal[mirna_seq], columns=['mirna_name', 'Gene symbol', 'signal'])
+    gene_fold_change_per_miRNA = pd.read_csv('mirna_fcs.csv',index_col=0, header=0, sep=',')
+    
+    labeled_data = pd.merge(gene_and_signal, gene_fold_change_per_miRNA[['Gene symbol', mirna_name]], on='Gene symbol')
+    
+    # Filter genes with no predicted binding sites for selected miRNA
+    # TODO: might not be what we want to do - what is our prediction of BSs is not correct?
+    labeled_data = labeled_data.where(labeled_data.signal.str.len() > 0).dropna()
+
+    return labeled_data
 
 
 # genes we can compare with Bartel are in test set
 def split_train_test_bartel(
-    padded_data_tensor, input_labels, input_data_genes_filtered, mirna_FCs, mirna_name
+    input_data, input_labels, input_data_genes_filtered, mirna_FCs, mirna_name
 ):
     targetscan = pd.read_csv('Predicted_Targets_Context_Scores.default_predictions.txt',index_col=0, header=0, sep='\t')
     targetscan = targetscan[["context++ score","weighted context++ score","miRNA","Gene Symbol"]]
@@ -19,12 +47,12 @@ def split_train_test_bartel(
         set(input_data_genes_filtered))
     
 
-    # x_train, x_test, y_train, y_test = train_test_split(padded_data_tensor, input_labels, test_size=0.2, random_state=42)
+    # x_train, x_test, y_train, y_test = train_test_split(input_data, input_labels, test_size=0.2, random_state=RANDOM_STATE)
     # Split the data and gene names simultaneously
     indecis = []
     x_train, x_test, y_train, y_test, gene_names_train, gene_names_test = [],[],[],[],[],[]
 
-    for sample, label, name in zip(padded_data_tensor, input_labels, input_data_genes_filtered):
+    for sample, label, name in zip(input_data, input_labels, input_data_genes_filtered):
         if name in bartel_test_samples:
             x_test.append(sample)
             y_test.append(label)
@@ -36,7 +64,7 @@ def split_train_test_bartel(
     # print(len(x_train), len(x_test))
 
     # validation
-    x_train, x_val, y_train, y_val, gene_names_train, gene_names_val = train_test_split(x_train, y_train, gene_names_train, test_size=0.1, random_state=42)
+    x_train, x_val, y_train, y_val, gene_names_train, gene_names_val = train_test_split(x_train, y_train, gene_names_train, test_size=0.1, random_state=RANDOM_STATE)
 
     # print(len(y_train), len(y_val), len(y_test))
     # print(len(gene_names_train), len(gene_names_val), len(gene_names_test))
@@ -46,13 +74,13 @@ def split_train_test_bartel(
     
 # default train-val-test split
 def split_train_test(padded_data_tensor, input_labels, input_data_genes_filtered):
-    # x_train, x_test, y_train, y_test = train_test_split(padded_data_tensor, input_labels, test_size=0.2, random_state=42)
+    # x_train, x_test, y_train, y_test = train_test_split(padded_data_tensor, input_labels, test_size=0.2, random_state=RANDOM_STATE)
     # Split the data and gene names simultaneously
     (x_train, x_test, y_train, y_test, gene_names_train, gene_names_test) = train_test_split(
-        padded_data_tensor, input_labels, input_data_genes_filtered, test_size=0.2, random_state=42)
+        padded_data_tensor, input_labels, input_data_genes_filtered, test_size=0.2, random_state=RANDOM_STATE)
 
         #validation
-    x_train, x_val, y_train, y_val, gene_names_train, gene_names_val = train_test_split(x_train, y_train, gene_names_train, test_size=0.1, random_state=42)
+    x_train, x_val, y_train, y_val, gene_names_train, gene_names_val = train_test_split(x_train, y_train, gene_names_train, test_size=0.1, random_state=RANDOM_STATE)
 
     # print(len(y_train), len(y_val), len(y_test))
     # print(len(gene_names_train), len(gene_names_val), len(gene_names_test))
@@ -62,7 +90,7 @@ def split_train_test(padded_data_tensor, input_labels, input_data_genes_filtered
 
 # pytorch datasets and dataloders
 def get_test_dataloader(x_test, y_test, batch_size):
-    test_dataset = TensorDataset(torch.stack(x_test).unsqueeze(1).float(), torch.tensor(y_test).unsqueeze(dim=1))    
+    test_dataset = TensorDataset(torch.stack(x_test).unsqueeze(1).float(), torch.tensor(y_test).unsqueeze(dim=1).float())    
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     return test_loader
 
@@ -99,7 +127,8 @@ class ValDataset(Dataset):
 def get_train_dataloader(x_train, y_train, batch_size):
     #dummy exps and indentifiers
     exps = [1 for x in range(len(y_train))]
-    train_dataset = TrainDataset(torch.stack(x_train).unsqueeze(1).float(), torch.tensor(y_train).unsqueeze(dim=1), exps)
+    # train_dataset = TrainDataset(torch.stack(x_train).unsqueeze(1).float(), torch.tensor(y_train).float(), exps)
+    train_dataset = TrainDataset(torch.stack(x_train).unsqueeze(1).float(), torch.tensor(y_train).unsqueeze(dim=1).float(), exps)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     return train_loader
 
@@ -112,7 +141,7 @@ def get_val_dataloader(x_val, y_val, batch_size):
         item['label']=label
         item['exp']=1
         identifiers.append(item)
-    val_dataset = ValDataset(torch.stack(x_val).unsqueeze(1).float(), torch.tensor(y_val).unsqueeze(dim=1), identifiers)
+    val_dataset = ValDataset(torch.stack(x_val).unsqueeze(1).float(), torch.tensor(y_val).unsqueeze(dim=1).float(), identifiers)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     return val_loader 
 

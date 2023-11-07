@@ -20,6 +20,7 @@ class Small_CNN(pl.LightningModule):
             wd=0.01,
             logging_steps=1,
             pos_weight=1.0,
+            num_cnn_layers=1,
     ):
 
         super().__init__()
@@ -29,21 +30,21 @@ class Small_CNN(pl.LightningModule):
 
         if(pooling=='rnn'):
             self.architecture = torch.nn.Sequential(
-                SimpleCNN(num_layers=1),
+                SimpleCNN(num_layers=num_cnn_layers),
                 Permute(),
                 RNNEncoder(input_size=8, hidden_size=16, num_layers=1, dropout=0.2),
                 MLP(input_size=96, hidden_size=30),
             )
         if(pooling=='att'):
             self.architecture = torch.nn.Sequential(
-                SimpleCNN(num_layers=1),
+                SimpleCNN(num_layers=num_cnn_layers),
                 Permute(),
-                Attention(input_dim=8, len_limit=400000),
-                MLP(8, 30),
+                Attention(input_dim=2 ** (num_cnn_layers+2), len_limit=400000),
+                MLP(2 ** (num_cnn_layers+2), 30),
             )
         if(pooling=='max'):
             self.architecture = torch.nn.Sequential(
-                SimpleCNN(num_layers=1),
+                SimpleCNN(num_layers=num_cnn_layers),
                 torch.nn.AdaptiveMaxPool1d(1),
                 torch.nn.Flatten(),
                 MLP(8, 30),
