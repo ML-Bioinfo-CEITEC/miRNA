@@ -15,4 +15,4 @@ f.e. `git clone https://github.com/ML-Bioinfo-CEITEC/miRNA.git`
 Run the [`method_cnn.ipynb`](https://github.com/ML-Bioinfo-CEITEC/miRNA/blob/main/method_cnn.ipynb)
 
 ### c) To prepare or reproduce training/testing data with specific parameters
-use the [`data_preprocessing.ipynb`](https://github.com/ML-Bioinfo-CEITEC/miRNA/blob/main/data_preprocessing.ipynb)
+use the [`data_preprocessing.ipynb`](https://github.com/ML-Bioinfo-CEITEC/miRNA/blob/main/data_preprocessing.ipynb) (requires the environment set up [mentioned above](https://github.com/ML-Bioinfo-CEITEC/miRNA/tree/main#2-set-up-the-environment))
