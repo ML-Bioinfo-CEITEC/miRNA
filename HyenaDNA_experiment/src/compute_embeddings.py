@@ -179,7 +179,7 @@ def get_tokenizer(max_length):
 
 def tokenize_sample(tokenizer, miRNA_seq, mRNA_seq):
     
-    return tokenizer(miRNA_seq)["input_ids"] + tokenizer(mRNA_seq)["input_ids"][1:]
+    return tokenizer(miRNA_seq + "NNNNN" + mRNA_seq)["input_ids"]
 
 def load_data(filepath):
     return pd.read_csv(filepath)
