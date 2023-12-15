@@ -1,6 +1,6 @@
 ENV_NAME="hyena-dna"
 
-conda create -n $ENV_NAME python=3.8 ipykernel nb_conda_kernels
+conda create -n $ENV_NAME python=3.8 ipykernel ipywidgets nb_conda_kernels 
 source activate $ENV_NAME
 conda install pytorch==1.13.0 torchvision==0.14.0 torchaudio==0.13.0 pytorch-cuda=11.7 -c pytorch -c nvidia
 
