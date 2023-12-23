@@ -7,15 +7,21 @@ from utils import MIRNAS_NAME_SEQUENCE_DICT, save_dataframe_to_csv, load_data_fr
 
 DEFAULT_CLS_NO_CHANGE_UPPER_THRESHOLD = -0.1
 DEFAULT_CLS_CHANGE_LOWER_THRESHOLD = -0.2
+DEFAULT_SEQUENCE_LENGTH_THRESHOLD = 16300
 
-COLUMNS_TO_KEEP_FROM_INPUT_DATA = ['miRNA', 'utr3', 'log2fold']
+SEED = 42
+
 REGRESSION_LABEL_COLUMN = 'log2fold'
+MRNA_SEQ_COLUMN = 'utr3'
+MIRNA_SEQ_COLUMN = 'miRNA'
+COLUMNS_TO_KEEP_FROM_INPUT_DATA = [MIRNA_SEQ_COLUMN, MRNA_SEQ_COLUMN, REGRESSION_LABEL_COLUMN]
 REGRESSION_LABEL_COLUMN_CLAMPED_TO_ZERO = 'log2fold_clamped'
 CLASSIFICATION_LABEL_COLUMN = 'cls_label'
 SEQUENCE_PAIRS_WITH_LABEL_EXT = '.nlp'
 DATA_WITH_POSITIVE_LABEL_CLAMPED_TO_ZERO_EXT = '.clamped_to_zero'
 CLASSIFICATION_DATA_EXT = '.cls'
-
+SEQUENCE_LENGTH_BELOW_EXT = '.seq_len_below'
+BALANCED_DOWNSAMPLES_EXT = '.balanced_down'
 
 def transform_to_sequence_pairs_with_label(data, mirna_sequences, columns):
     seq_array = []
@@ -44,6 +50,33 @@ def convert_to_cls_task(data_df,
     data_df = data_df[data_df[cls_label_column] != 2].reset_index(drop=True)
     
     return data_df
+
+def remove_sequence_above_len_threshold(data_df, seq_column, len_threshold):
+    data_df.drop(data_df[data_df[seq_column].str.len() > len_threshold].index, inplace=True)
+    return data_df
+
+def balance_by_downsampling(df, label_column, seed=42):
+    """Downsample the dominant class to balance the dataset."""
+    # Identify the class with the minimum number of samples
+    min_class = df[label_column].value_counts().idxmin()
+    
+    # Separate data into classes
+    minority_class = df[df[label_column] == min_class]
+    majority_class = df[df[label_column] != min_class]
+    
+    # Downsample the majority class
+    majority_downsampled = majority_class.sample(len(minority_class), replace=False, random_state=seed)
+    # majority_downsampled = resample(majority_class,
+    #                                replace=False,  # Set to True if you want to allow duplicates
+    #                                n_samples=len(minority_class),
+    #                                random_state=seed)
+    
+    # Combine the minority class with the downsampled majority class
+    balanced_df = pd.concat([minority_class, majority_downsampled])
+    # Shuffle samples to mix labels
+    balanced_df = balanced_df.sample(frac=1).reset_index(drop=True)
+    
+    return balanced_df
 
 def add_extension(path, extension):
     return path.with_suffix(path.suffix + extension)
@@ -110,3 +143,18 @@ if __name__ == '__main__':
     cls_data_path = add_extension(data_with_positive_label_clamped_to_zero_path, 
                                   CLASSIFICATION_DATA_EXT)
     save_dataframe_to_csv(cls_data, cls_data_path)
+    
+    print(f"Removing samples where {MRNA_SEQ_COLUMN} columns contains sequence longer than {DEFAULT_SEQUENCE_LENGTH_THRESHOLD}.")
+    shorter_seq_data = remove_sequence_above_len_threshold(cls_data, MRNA_SEQ_COLUMN, DEFAULT_SEQUENCE_LENGTH_THRESHOLD)
+    del cls_data
+    shorter_seq_data_path = add_extension(cls_data_path,
+                                          SEQUENCE_LENGTH_BELOW_EXT)
+    save_dataframe_to_csv(shorter_seq_data, shorter_seq_data_path)
+    
+    print("Downsampling dominant class to create a balanced dataset.")
+    balanced_data = balance_by_downsampling(shorter_seq_data, CLASSIFICATION_LABEL_COLUMN, seed=SEED)
+    del shorter_seq_data
+    balanced_path = add_extension(shorter_seq_data_path,
+                                  BALANCED_DOWNSAMPLES_EXT)
+    save_dataframe_to_csv(balanced_data, balanced_path)
+    
