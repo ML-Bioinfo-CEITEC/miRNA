@@ -1,38 +1,16 @@
-from transformers import PreTrainedModel
+#from transformers import PreTrainedModel
 import argparse
 from tqdm import tqdm
 import pandas as pd
-import re
+import numpy as np
 import os
-import json
 import torch
+from torch.utils.data import DataLoader
 
-from utils import save_dataframe_to_csv
-from hyena_helpers import load_model, get_tokenizer, load_data_from_csv
-
-def tokenize_sample(tokenizer, miRNA_seq, mRNA_seq):
-    
-    return tokenizer(miRNA_seq + "NNNNN" + mRNA_seq)["input_ids"]
-
-def embedd_sample(model, tok_seq, device):
-    
-    tok_seq = torch.LongTensor(tok_seq).unsqueeze(0)
-    tok_seq = tok_seq.to(device)
-
-    # prep model and forward
-    model.to(device)
-    model.eval()
-    with torch.inference_mode():
-        embeddings = model(tok_seq)
-        
-    # Convert the tensor to float if it's not already
-    sequence_embedding = embeddings.float()
-
-    # Mean pooling along the sequence length dimension (axis=1)
-    mean_pooled_embedding = torch.mean(sequence_embedding, dim=1)
-        
-    # extracting embeddings as a simple list of values
-    return list(mean_pooled_embedding.detach().cpu().numpy()[0])
+from utils import save_dataframe_to_csv, load_data_from_csv
+from utils import MRNA_SEQ_COLUMN, MIRNA_SEQ_COLUMN, CLASSIFICATION_LABEL_COLUMN
+from hyenadna import HyenaDNAEncoder, Pooler, POOL_OPTIONS
+from hyenadna_helpers import miRNA_Dataset
 
 if __name__ == '__main__':
     
@@ -47,21 +25,47 @@ if __name__ == '__main__':
     if args.output_filepath is None:
         args.output_filepath = args.input_filepath + ".embedd"
     
-    model, max_length = load_model()
-    tokenizer = get_tokenizer(max_length)
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Using device", device)
+    
+    encoder = HyenaDNAEncoder()
+    encoder.eval()
+    encoder = encoder.to(device)
+    
     data = load_data_from_csv(args.input_filepath)
+    dset = miRNA_Dataset(
+        data[MIRNA_SEQ_COLUMN].reset_index(drop=True),
+        data[MRNA_SEQ_COLUMN].reset_index(drop=True),
+        data[CLASSIFICATION_LABEL_COLUMN].reset_index(drop=True),
+        max_length = encoder.tokenizer.model_max_length,
+        use_padding = True,
+        tokenizer=encoder.tokenizer,
+        add_eos=False,
+    )
+    loader = DataLoader(dset, batch_size=1, shuffle=False)
     
-    tqdm.pandas()
-    data['tokenized'] = data.progress_apply(lambda x: tokenize_sample(tokenizer, x['miRNA'], x['utr3']), axis=1)
+    for mode_pooler in POOL_OPTIONS:
+        print("Using pool option", mode_pooler)
+        
+        embeddings = []
+        
+        pooler = Pooler(mode = mode_pooler, l_output = 0) 
     
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print("Using device:", device)
+        # put model in train mode
+ 
+        pooler.eval()
+        pooler = pooler.to(device)
+        torch.set_grad_enabled(False)
+        
+        for idx, (sample, label) in enumerate(tqdm(loader)):
+            sample = sample.to(device)
+            hidden = encoder(sample)
+            embedd = pooler(hidden)
+
+            embedd = ','.join(str(i) for i in list(embedd.detach().cpu().numpy()[0]))
+            embeddings.append(embedd)
     
-    # TODO: maybe try batches?
-    data['embedded'] = data.progress_apply(lambda x: embedd_sample(model, x['tokenized'], device), axis=1)
-    
-    # converting list to string on purpose, so we can control saving and then loading from the file
-    data["tokenized"] = data["tokenized"].apply(lambda x: ','.join(str(i) for i in x))
-    data["embedded"] = data["embedded"].apply(lambda x: ','.join(str(i) for i in x))
+        data['embedd_' + mode_pooler] = embeddings
     
     save_dataframe_to_csv(data, args.output_filepath)
