@@ -4,6 +4,8 @@ import torchmetrics
 import lightning as L
 from transformers import AutoModel, AutoTokenizer
 
+POOL_OPTIONS = ['last', 'first', 'pool', 'sum']
+
 class HyenaDNAEncoder(L.LightningModule):
     def __init__(self, model_path = None, revision = None, freeze = False):
         super().__init__()
@@ -107,13 +109,13 @@ class Pooler(nn.Module):
         elif self.mode == "sum":
             restrict = lambda x: torch.cumsum(x, dim=-2)[..., -l_output:, :]
             # TODO use same restrict function as pool case
-        elif self.mode == 'ragged':
-            assert lengths is not None, "lengths must be provided for ragged mode"
-            # remove any additional padding (beyond max length of any sequence in the batch)
-            restrict = lambda x: x[..., : max(lengths), :]
+        # elif self.mode == 'ragged':
+        #     assert lengths is not None, "lengths must be provided for ragged mode"
+        #     # remove any additional padding (beyond max length of any sequence in the batch)
+        #     restrict = lambda x: x[..., : max(lengths), :]
         else:
             raise NotImplementedError(
-                "Mode must be ['last' | 'first' | 'pool' | 'sum' | 'ragged']"
+                "Mode must be ", POOL_OPTIONS
             )
 
         # Restrict to actual length of sequence
