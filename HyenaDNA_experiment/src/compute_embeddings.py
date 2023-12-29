@@ -43,7 +43,16 @@ if __name__ == '__main__':
         tokenizer=encoder.tokenizer,
         add_eos=False,
     )
-    loader = DataLoader(dset, batch_size=1, shuffle=False)
+    loader = DataLoader(dset, batch_size=16, shuffle=False)
+    
+    torch.set_grad_enabled(False)
+    
+    hiddens = []
+    print("Running samples through HyenaDNA encoder")
+    for idx, (sample, label) in enumerate(tqdm(loader)):
+        sample = sample.to(device)
+        hidden = encoder(sample)
+        hiddens.extend(hidden.detach().cpu())
     
     for mode_pooler in POOL_OPTIONS:
         print("Using pool option", mode_pooler)
@@ -56,14 +65,12 @@ if __name__ == '__main__':
  
         pooler.eval()
         pooler = pooler.to(device)
-        torch.set_grad_enabled(False)
         
-        for idx, (sample, label) in enumerate(tqdm(loader)):
-            sample = sample.to(device)
-            hidden = encoder(sample)
+        for hidden in tqdm(hiddens):
+            hidden = hidden.to(device)
             embedd = pooler(hidden)
 
-            embedd = ','.join(str(i) for i in list(embedd.detach().cpu().numpy()[0]))
+            embedd = ','.join(str(i) for i in list(embedd.detach().cpu().numpy()))
             embeddings.append(embedd)
     
         data['embedd_' + mode_pooler] = embeddings
