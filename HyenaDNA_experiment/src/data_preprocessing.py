@@ -4,11 +4,11 @@ import numpy as np
 from pathlib import Path
 
 from utils import MIRNAS_NAME_SEQUENCE_DICT, save_dataframe_to_csv, load_data_from_pickle
-from utils import REGRESSION_LABEL_COLUMN,
-                  MRNA_SEQ_COLUMN,
-                  MIRNA_SEQ_COLUMN,
-                  COLUMNS_TO_KEEP_FROM_INPUT_DATA,
-                  REGRESSION_LABEL_COLUMN_CLAMPED_TO_ZERO,
+from utils import REGRESSION_LABEL_COLUMN, \
+                  MRNA_SEQ_COLUMN, \
+                  MIRNA_SEQ_COLUMN, \
+                  COLUMNS_TO_KEEP_FROM_INPUT_DATA, \
+                  REGRESSION_LABEL_COLUMN_CLAMPED_TO_ZERO, \
                   CLASSIFICATION_LABEL_COLUMN
 
 DEFAULT_CLS_NO_CHANGE_UPPER_THRESHOLD = -0.1
