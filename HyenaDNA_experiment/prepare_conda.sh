@@ -9,3 +9,7 @@ pip install -r requirements.txt
 rm requirements.txt
 
 # TODO: install Flash Attention - https://github.com/HazyResearch/hyena-dna?tab=readme-ov-file#dependencies
+
+pip install comet_ml # for logging training
+#pip install optuna # for hyperparameter tuning
+pip install lightning # Pytorch Lightning for handling models
