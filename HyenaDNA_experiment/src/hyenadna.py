@@ -66,8 +66,6 @@ class Pooler(nn.Module):
         Returns: (n_batch, l_output, d_output)
         """
         
-        #print("l_output", l_output)
-        #print("self.l_output", self.l_output)
 
         if self.l_output is None:
             if l_output is not None:
@@ -108,11 +106,7 @@ class Pooler(nn.Module):
 
         elif self.mode == "sum":
             restrict = lambda x: torch.cumsum(x, dim=-2)[..., -l_output:, :]
-            # TODO use same restrict function as pool case
-        # elif self.mode == 'ragged':
-        #     assert lengths is not None, "lengths must be provided for ragged mode"
-        #     # remove any additional padding (beyond max length of any sequence in the batch)
-        #     restrict = lambda x: x[..., : max(lengths), :]
+
         else:
             raise NotImplementedError(
                 "Mode must be ", POOL_OPTIONS
@@ -167,7 +161,10 @@ class HyenaDNABinaryCls(L.LightningModule):
             self.cls = classifier
         
         self.criterion = nn.BCELoss()
-        self.accuracy = torchmetrics.classification.Accuracy(task="binary")
+
+        self.train_acc = torchmetrics.Accuracy(task="binary")
+        self.val_acc = torchmetrics.Accuracy(task="binary")
+        self.test_acc = torchmetrics.Accuracy(task="binary")
         
         self.lr = lr
         self.wd = weight_decay
@@ -178,44 +175,42 @@ class HyenaDNABinaryCls(L.LightningModule):
         embedd = self.pooler(hidden)
 
         return self.cls(embedd)
+    
+    def _shared_step(self, batch):
         
-    def training_step(self, batch, batch_idx):
         x, y = batch
         
         y_hat = self(x)
         loss = self.criterion(y_hat, y.float())
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         
-        acc = self.accuracy(y_hat, y)
-        self.log('train_acc', acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        return loss, y_hat, y
+        
+    def training_step(self, batch, batch_idx):
+        
+        loss, y_hat, y = self._shared_step(batch)
+        
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.train_acc(y_hat, y)
+        self.log('train_acc', self.train_acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         
         return loss
     
     def validation_step(self, batch, batch_idx):
-        # this is the validation loop
-        x, y = batch
         
-        y_hat = self(x)
-        val_loss = self.criterion(y_hat, y.float())
+        loss, y_hat, y = self._shared_step(batch)
         
-        self.log("val_loss", val_loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.val_acc(y_hat, y)
+        self.log('val_acc', self.val_acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         
-        acc = self.accuracy(y_hat, y)
-        self.log('val_acc', acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        
-        return val_loss
+        return loss
         
     def test_step(self, batch, batch_idx):
-        # this is the test loop
-        x, y = batch
         
-        y_hat = self(x)
-        test_loss = self.criterion(y_hat, y.float())
-        
-        self.log("test_loss", test_loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        
-        acc = self.accuracy(y_hat, y)
-        self.log('test_acc', acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        _, y_hat, y = self._shared_step(batch)
+
+        self.test_acc(y_hat, y)
+        self.log('test_acc', self.test_acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         
         return test_loss
     
