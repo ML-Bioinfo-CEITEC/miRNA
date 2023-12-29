@@ -1,67 +1,99 @@
 import torch
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
+import lightning as L
+from lightning.pytorch.loggers import CometLogger
+from lightning.pytorch import seed_everything
+from sklearn.model_selection import train_test_split
+
+from hyenadna import HyenaDNABinaryCls
 from hyenadna_helpers import miRNA_Dataset
-import torch.nn as nn
-from hyenadna_helpers import train, test_metrics
-import torch.optim as optim
+from utils import load_data_from_csv
+from utils import MRNA_SEQ_COLUMN, MIRNA_SEQ_COLUMN, CLASSIFICATION_LABEL_COLUMN
 
+def prepare_data(
+    data_path,
+    tokenizer,
+    test_size = 0.2,
+    seq1_col = MIRNA_SEQ_COLUMN,
+    seq2_col = MRNA_SEQ_COLUMN,
+    cls_label_col = CLASSIFICATION_LABEL_COLUMN,
+    batch_size = 16,
+    use_padding = True,
+    add_eos = False
+):
+    
+    data = load_data_from_csv(data_path)
+    train_df, test_df = train_test_split(data, test_size=test_size)
+    
+    train_dset = miRNA_Dataset(
+        train_df[seq1_col].reset_index(drop=True),
+        train_df[seq2_col].reset_index(drop=True),
+        train_df[cls_label_col].reset_index(drop=True),
+        max_length = tokenizer.model_max_length,
+        use_padding = use_padding,
+        tokenizer=tokenizer,
+        add_eos=add_eos,
+    )
+    
+    test_dset = miRNA_Dataset(
+        test_df[seq1_col].reset_index(drop=True),
+        test_df[seq2_col].reset_index(drop=True),
+        test_df[cls_label_col].reset_index(drop=True),
+        max_length = tokenizer.model_max_length,
+        use_padding = use_padding,
+        tokenizer=tokenizer,
+        add_eos=add_eos,
+    )
+    
+    train_loader = DataLoader(train_dset, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_dset, batch_size=batch_size, shuffle=False)
+    
+    return train_loader, test_loader
+    
+if __name__ == '__main__':
+    
+    hyperparams = {
+        "batch_size": 16,
+        "mode_pooler": 'last',
+        "max_epochs": 10,
+        "lr": 1e-3,
+        "weight_decay": 0.01,
+        "warmup_steps": 100,
+        "data_path": "~/miRNA/HyenaDNA_experiment/debug/3utr.sequences.refseq_id.mirna_fc.pkl.nlp.clamped_to_zero.cls.seq_len_below.balanced_down",
+        
+    }
+    
+    seed_everything(42, workers=True)
 
-model_path = "LongSafari/hyenadna-tiny-16k-seqlen-d128-hf"
-# loss function
-loss_fn = nn.CrossEntropyLoss()
-learning_rate = 6e-4  # good default for Hyena
-weight_decay = 0.1
-num_epochs = 3
-
-# revision is a git commit hash of version of used model, can be found here: https://huggingface.co/LongSafari/hyenadna-tiny-16k-seqlen-d128-hf/commits/main
-model = AutoModelForSequenceClassification.from_pretrained(model_path, trust_remote_code=True, revision="e83c7caa155780f5f898017e736c3f6041e559cf")
-data = pd.read_csv('../debug/3utr.sequences.refseq_id.mirna_fc.pkl.nlp.clamped_to_zero.cls.seq_len_below.balanced_down')
-tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-
-# add pad token id to model config - it is not there by default and CLS models meeds it
-model.config.pad_token_id = tokenizer._vocab_str_to_int[tokenizer.pad_token]
-
-train_df, test_df = train_test_split(data, test_size=0.2)
-
-use_padding = True
-batch_size = 16 # lover batch_size to fit sequences into memory
-max_length = tokenizer.model_max_length
-
-# create datasets
-ds_train = miRNA_Dataset(
-    train_df['miRNA'].reset_index(drop=True),
-    train_df['utr3'].reset_index(drop=True),
-    train_df['cls_label'].reset_index(drop=True),
-    max_length = max_length,
-    use_padding = use_padding,
-    tokenizer=tokenizer,
-    add_eos=False,
-)
-
-ds_test = miRNA_Dataset(
-    test_df['miRNA'].reset_index(drop=True),
-    test_df['utr3'].reset_index(drop=True),
-    test_df['cls_label'].reset_index(drop=True),
-    max_length = max_length,
-    use_padding = use_padding,
-    tokenizer=tokenizer,
-    add_eos=False,
-)
-
-train_loader = DataLoader(ds_train, batch_size=batch_size, shuffle=True)
-test_loader = DataLoader(ds_test, batch_size=batch_size, shuffle=False)
-
-# create optimizer
-optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-
-# Set device to GPU if available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-model.to(device)
-
-for epoch in range(num_epochs):
-    train(model, device, train_loader, optimizer, epoch, loss_fn, log_interval=200)
-    test_metrics(model, device, test_loader, loss_fn)
-    optimizer.step()
+    cls = HyenaDNABinaryCls(
+        mode_pooler=hyperparams["mode_pooler"],
+        lr=hyperparams["lr"],
+        weight_decay=hyperparams["weight_decay"],
+        warmup_steps=hyperparams["warmup_steps"]
+    )
+    
+    # Arguments made to CometLogger are passed on to the comet_ml.Experiment class
+    comet_logger = CometLogger(
+        project_name="mirna-hyenadna",
+        api_key='3NQhHgMmmlfnoqTcvkG03nYo9',
+        log_code=True
+    )
+    
+    comet_logger.log_hyperparams(hyperparams)
+    
+    train_loader, test_loader = prepare_data(
+        hyperparams["data_path"],
+        cls.encoder.tokenizer
+    )
+    
+    trainer = L.Trainer(
+        deterministic=True,
+        accelerator="gpu",
+        max_epochs=hyperparams["max_epochs"],
+        logger=comet_logger
+    )
+    trainer.fit(
+        model=cls,
+        train_dataloaders=train_loader,
+        val_dataloaders=test_loader
+    )
