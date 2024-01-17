@@ -1,0 +1,9 @@
+batch_size: 16
+mode_pooler: "last"
+max_epochs: 10
+lr: 0.001
+weight_decay: 0.01
+warmup_steps: 100
+data_path: "~/miRNA/HyenaDNA_experiment/debug/3utr.sequences.refseq_id.mirna_fc.pkl.nlp.clamped_to_zero.cls.seq_len_below.balanced_down"
+project_name: "mirna-hyenadna"
+api_key: "3NQhHgMmmlfnoqTcvkG03nYo9"
