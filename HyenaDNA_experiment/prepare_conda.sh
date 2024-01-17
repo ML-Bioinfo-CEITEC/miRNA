@@ -12,3 +12,4 @@ pip install gdown # for downloading initial data
 pip install comet_ml # for logging training
 pip install lightning # Pytorch Lightning for handling models
 pip install transformers # for using HyenaDNA model from HF
+pip install "ray[tune]" # for hyperparameter tuning
