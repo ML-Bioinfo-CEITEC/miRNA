@@ -11,3 +11,14 @@ We use `conda` environment to keep our packages in correct versions. There are a
 Run:
 
 `. prepare_conda.sh`
+
+After this step, you should have activated conda environment with a name `hyena-dna`.
+
+## External files
+
+`python download.py`
+
+
+## Data preprocessing
+
+`python src/data_preprocessing.py data/3utr.sequences.refseq_id.mirna_fc.pkl data`
