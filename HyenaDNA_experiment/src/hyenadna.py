@@ -151,7 +151,7 @@ class HyenaDNABinaryCls(L.LightningModule):
             revision = revision_encoder,
             freeze = freeze_encoder)
         self.pooler = Pooler(mode = mode_pooler, l_output = 0) 
-        #print(self.encoder.out_features)
+
         if classifier is None:
             self.cls = nn.Sequential(
                 nn.Linear(self.encoder.out_features, 1),
@@ -189,9 +189,9 @@ class HyenaDNABinaryCls(L.LightningModule):
         
         loss, y_hat, y = self._shared_step(batch)
         
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("ptl/train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         self.train_acc(y_hat, y)
-        self.log('train_acc', self.train_acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log('ptl/train_accuracy', self.train_acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         
         return loss
     
@@ -199,11 +199,11 @@ class HyenaDNABinaryCls(L.LightningModule):
         
         loss, y_hat, y = self._shared_step(batch)
         
-        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("plt/val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         self.val_acc(y_hat, y)
-        self.log('val_acc', self.val_acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log('ptl/val_accuracy', self.val_acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         
-        return loss
+        return {"val_loss": loss, "val_accuracy": self.val_acc}
         
     def test_step(self, batch, batch_idx):
         
