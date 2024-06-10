@@ -1,18 +1,4 @@
-## Scanning the transcriptome for ago2:miRNA to mRNA binding sites and evaluating fold change
+## Scanning the transcriptome for ago2:miRNA to mRNA binding sites and predicting fold change
 
-### a) For an easy start with our preprocessed data 
-go to our collab notebook [colab_ready_playground_with_preprocessed_data.ipynb](https://github.com/ML-Bioinfo-CEITEC/miRNA/blob/main/colab_ready_playground_with_preprocessed_data.ipynb) 
-
-### b) To run the training and evaluation of our CNN + RNN method 
-#### 1. Clone the repository
-f.e. `git clone https://github.com/ML-Bioinfo-CEITEC/miRNA.git`
-#### 2. Set up the environment 
-  a) Create [conda env from](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#building-identical-conda-environments) `environment/spec-file.txt`
-
-  b) *OR* If you prefer pip, use `environment/requirements.txt`
-
-#### 3. Run the method notebook 
-Run the [`method_cnn.ipynb`](https://github.com/ML-Bioinfo-CEITEC/miRNA/blob/main/method_cnn.ipynb)
-
-### c) To prepare or reproduce training/testing data with specific parameters
-use the [`data_preprocessing.ipynb`](https://github.com/ML-Bioinfo-CEITEC/miRNA/blob/main/data_preprocessing.ipynb) (requires the environment set up [mentioned above](https://github.com/ML-Bioinfo-CEITEC/miRNA/tree/main#2-set-up-the-environment))
+### Data TargetScan 2015 7miRs HCT116 transfection
+https://drive.google.com/drive/folders/15pX8qrauPJbKYo6r07jRtBLZaRTU6LdO?usp=sharing
