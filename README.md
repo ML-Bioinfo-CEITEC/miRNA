@@ -9,7 +9,7 @@ Activate an existing environment by ```conda activate YOUR_ENVIRONMENT_NAME```
 Run the ```download_data.ipynb```
 
 ### Example ML notebooks
-After you download the datasets, you can play with example notebooks ```ML_training_and_evaluation.regression.ipynb``` and ```ML_training_and_evaluation.classification.ipynb```
+After you download the datasets, you can play with example notebooks ```ML_training_and_evaluation.regression.ipynb``` and ```ML_training_and_evaluation.classification.ipynb```. Choose the environment ```YOUR_ENVIRONMENT_NAME``` you created before as your notebook kernel.
 
 ## Data links
 ### 7miRs HCT116 transfection
