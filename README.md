@@ -2,7 +2,7 @@
 
 ## Running example models and evaluation
 ### Set up the environment
-Create a conda env from environment/spec-file.txt by running ```conda create --name YOUR_ENVIRONMENT_NAME --file spec-file.txt```
+Create a conda env by running ```conda create --name YOUR_ENVIRONMENT_NAME --file spec-file.txt```
 
 Activate an existing environment by ```conda activate YOUR_ENVIRONMENT_NAME```
 
