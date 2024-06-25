@@ -85,16 +85,12 @@ def rev_compl(st):
 
 
 def classify_site(gene, miRNA, get_seeds, thresh):
-
     seeds = get_seeds(miRNA)
     seed_counts = 0
-
-    # TODO: is it possible that one position will be counted as multiple seeds?
     for seq in seeds:
         seed_counts += gene.count(seq)
         if seed_counts > thresh:
             return 1
-        
     return 0
 
 
@@ -103,32 +99,10 @@ def get_seed_locations(gene, miRNA, get_seeds):
 
     seeds = get_seeds(miRNA)
     seed_loci_flags = [0] * len(gene)
-    
     for seq in seeds:
         start_indexes = [m.start() for m in re.finditer(seq, gene)]
         for i in start_indexes:
             seed_loci_flags[i:i+len(seq)] = [1] * len(seq)
-            
-    return seed_loci_flags
-
-
-def get_seed_locations(gene, miRNA, get_seeds):
-    # TODO: allow imperfect match
-
-    seeds = get_seeds(miRNA)
-    seed_loci_flags = [0] * len(gene)
-#     if len(seed_loci_flags) == len(gene):
-#         print('1 -OK -> len(seed_loci_flags) == len(gene)')
-    
-
-    for seq in seeds:
-        start_indexes = [m.start() for m in re.finditer(seq, gene)]
-        for i in start_indexes:
-            seed_loci_flags[i:i+len(seq)] = [1] * len(seq)
-
-#     if len(seed_loci_flags) == len(gene):
-#         print('2 -OK -> len(seed_loci_flags) == len(gene)')
-        
     return seed_loci_flags
 
 
