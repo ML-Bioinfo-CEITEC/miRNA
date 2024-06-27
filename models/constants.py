@@ -6,27 +6,18 @@ SEEDS_TO_COUNT = [
     'kmer6_mismatch_count',
 ]
 
-SEED_COUNT_COLUMNS = [
-    'kmer8_count_1', 'kmer8_count_2',
-       'kmer8_count_3', 'kmer8_count_4', 'kmer8_count_5', 'kmer8_count_6',
-       'kmer7_count_1', 'kmer7_count_2', 'kmer7_count_3', 'kmer7_count_4',
-       'kmer7_count_5', 'kmer7_count_6', 'kmer6_count_1', 'kmer6_count_2',
-       'kmer6_count_3', 'kmer6_count_4', 'kmer6_count_5', 'kmer6_count_6',
-       'kmer6_bulge_count_1', 'kmer6_bulge_count_2', 'kmer6_bulge_count_3',
-       'kmer6_bulge_count_4', 'kmer6_bulge_count_5', 'kmer6_bulge_count_6',
-       'kmer6_bulge_or_mismatch_count_1', 'kmer6_bulge_or_mismatch_count_2',
-       'kmer6_bulge_or_mismatch_count_3', 'kmer6_bulge_or_mismatch_count_4',
-       'kmer6_bulge_or_mismatch_count_5', 'kmer6_bulge_or_mismatch_count_6',
-]
+SEED_COUNTS = [1, 2, 3, 4, 5, 6]
+
+SEED_COUNT_COLUMNS = [f'{seed}_{count}' for seed in SEEDS_TO_COUNT for count in SEED_COUNTS]
 
 TARGETSCAN_COLUMN_TO_SEQUENCE = {
-    'hsa-miR-16-5p': 'TAGCAGCACGTAAATATTGGCG', 
-    'hsa-miR-106b-5p': 'TAAAGTGCTGACAGTGCAGAT', 
-    'hsa-miR-200a-3p': 'TAACACTGTCTGGTAACGATGT', # https://mirbase.org/hairpin/MI0000737
-    'hsa-miR-200b-3p': 'TAATACTGCCTGGTAATGATGA', 
-    'hsa-miR-215-5p': 'ATGACCTATGAATTGACAGAC', 
-    'hsa-let-7c-5p': 'TGAGGTAGTAGGTTGTATGGTT', 
-    'hsa-miR-103a-3p': 'AGCAGCATTGTACAGGGCTATGA'
+    'hsa-miR-16-5p': 'TAGCAGCACGTAAATATTGGCG', # https://mirbase.org/mature/MIMAT0000069
+    'hsa-miR-106b-5p': 'TAAAGTGCTGACAGTGCAGAT', # https://mirbase.org/mature/MIMAT0000680
+    'hsa-miR-200a-3p': 'TAACACTGTCTGGTAACGATGT', # https://mirbase.org/mature/MIMAT0000682
+    'hsa-miR-200b-3p': 'TAATACTGCCTGGTAATGATGA', # https://mirbase.org/mature/MIMAT0000318
+    'hsa-miR-215-5p': 'ATGACCTATGAATTGACAGAC', # https://mirbase.org/mature/MIMAT0000272
+    'hsa-let-7c-5p': 'TGAGGTAGTAGGTTGTATGGTT', # https://mirbase.org/mature/MIMAT0000064
+    'hsa-miR-103a-3p': 'AGCAGCATTGTACAGGGCTATGA' # https://mirbase.org/mature/MIMAT0000101
 }
 
 PSILAC_DATA = {
