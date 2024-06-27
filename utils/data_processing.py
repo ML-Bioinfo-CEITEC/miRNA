@@ -10,6 +10,12 @@ def get_ids_without_version(id_x):
         return id_x
 
 def parse_biomart_fasta(fasta_path):
+    """
+     Reads a FASTA file got from the Ensembl BioMart and parses its content into a list of dictionaries. Each dictionary represents a sequence record with attributes extracted from the FASTA's ID string of the sequence. 
+    
+    Parameters:
+    - fasta_path: path to a specific FASTA file with the coresponding structure of the sequence's ID string
+    """
     sequences = []
     i = 0
     # Open the file and parse it
@@ -39,7 +45,4 @@ def parse_biomart_fasta(fasta_path):
                     "sequence": record.seq,
                 }
             )
-            # i+=1
-            # if i > 10:
-                # break
     return sequences
