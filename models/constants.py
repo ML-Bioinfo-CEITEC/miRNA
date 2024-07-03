@@ -3,7 +3,8 @@ SEEDS_TO_COUNT = [
     'kmer7_count',
     'kmer6_count',
     'kmer6_bulge_count',
-    'kmer6_mismatch_count',
+    # 'kmer6_mismatch_count',
+    'kmer6_bulge_or_mismatch_count',
 ]
 
 SEED_COUNTS = [1, 2, 3, 4, 5, 6]

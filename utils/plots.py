@@ -6,6 +6,7 @@ from sklearn.metrics import r2_score
 from sklearn.feature_selection import r_regression
 from scipy.stats import spearmanr
 from scipy.stats import pearsonr
+from sklearn.metrics import precision_recall_fscore_support, PrecisionRecallDisplay
 
 
 def plot_multiple_cdfs_with_medians(
@@ -157,3 +158,43 @@ def plot_feature_importance(feature_names, feature_importances):
 
     plt.tight_layout()
     plt.show()
+    
+
+def plot_prc_with_seeds(data, seed_types, methods=[], title='', class_label_column='label', count_thresholds=[1,2,3,4]):
+    markers = {
+        'kmer8': 'x',
+        'kmer7': 'o',
+        'kmer6': 'v',
+        'kmer6_bulge': '*',
+        'kmer6_bulge_or_mismatch': '^'
+    }
+    
+    fig, ax = plt.subplots(nrows = 1, ncols=1, figsize=(5, 5))
+    # colors = ['brown', 'blue', 'orange', 'pink', 'gray', 'black']
+    colors = sns.color_palette("colorblind", len(count_thresholds))
+    for seed_name in seed_types.keys():
+        marker = markers[seed_name]
+        for threshold in count_thresholds:
+            prec, rec, _, _ = precision_recall_fscore_support(data[class_label_column].values, data[seed_name + "_count_" + str(threshold)].values, average='binary')
+
+            ax.plot(rec, prec, marker, color=colors[threshold - 1],  label=seed_name + "_count_" + str(threshold))
+
+    for idx, meth in enumerate(methods):
+        PrecisionRecallDisplay.from_predictions(
+            data[class_label_column], 
+            data[meth], 
+            ax=ax, label=str(meth), color=colors[idx]
+        )
+     
+    ax.set_xlabel('Recall')
+    ax.set_ylabel('Precision')
+    ax.set_title(title)
+
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    plt.legend(loc='center left', bbox_to_anchor=(1.1, 0.5))
+    plt.gcf().set_dpi(300)
+    plt.grid(False)
+    plt.show()
+    return fig, ax

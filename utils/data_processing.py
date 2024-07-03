@@ -46,3 +46,49 @@ def parse_biomart_fasta(fasta_path):
                 }
             )
     return sequences
+
+
+def get_train_and_test_set(data_folder_path, dataset_name, mirna_names, file_extension_train, file_extension_test):
+    input_dataset_file_path_train = '{}{}.{}{}'.format(
+        data_folder_path,
+        dataset_name, 
+        mirna_names[0],
+        file_extension_train
+    )
+    df_train = pd.read_pickle(input_dataset_file_path_train)
+
+    input_dataset_file_path_test = '{}{}.{}{}'.format(
+        data_folder_path,
+        dataset_name, 
+        mirna_names[0],
+        file_extension_test
+    )
+    df_test = pd.read_pickle(input_dataset_file_path_test)
+
+    if len(mirna_names) > 1:
+        for name in mirna_names[1:]:
+            input_dataset_file_path_train = '{}{}.{}{}'.format(
+                data_folder_path,
+                dataset_name, 
+                name,
+                file_extension_train
+            )
+            df_train = pd.concat(
+                [df_train, pd.read_pickle(input_dataset_file_path_train)], 
+                axis='index',
+                ignore_index=True,
+            )
+
+            input_dataset_file_path_test = '{}{}.{}{}'.format(
+                data_folder_path,
+                dataset_name, 
+                name,
+                file_extension_test
+            )
+            df_test = pd.concat(
+                [df_test, pd.read_pickle(input_dataset_file_path_test)],
+                axis='index',
+                ignore_index=True,
+            )
+
+    return df_train, df_test

@@ -1,6 +1,6 @@
 import re
 import matplotlib.pyplot as plt
-from sklearn.metrics import precision_recall_fscore_support, PrecisionRecallDisplay
+from collections import defaultdict
 
 
 def seeds_8mer(miRNA):
@@ -95,8 +95,6 @@ def classify_site(gene, miRNA, get_seeds, thresh):
 
 
 def get_seed_locations(gene, miRNA, get_seeds):
-    # TODO: allow imperfect match
-
     seeds = get_seeds(miRNA)
     seed_loci_flags = [0] * len(gene)
     for seq in seeds:
@@ -106,7 +104,45 @@ def get_seed_locations(gene, miRNA, get_seeds):
     return seed_loci_flags
 
 
-SEED_TYPES = {
+def count_miRNA_seeds(mRNA, miRNA):
+    # Initialize dictionary to keep track of positions
+    positions_covered = defaultdict(bool)
+
+    def count_seeds(seeds):
+        count = 0
+        for seed in seeds:
+            start_positions = [i for i in range(len(mRNA)) if mRNA.startswith(seed, i)]
+            for start in start_positions:
+                if all(not positions_covered[pos] for pos in range(start, start + len(seed))):
+                    count += 1
+                    for pos in range(start, start + len(seed)):
+                        positions_covered[pos] = True
+        return count
+
+    count_8mer = count_seeds(SEED_TYPE_TO_EXTRACTION_FUNCTION['kmer8'](miRNA))
+    count_7mer = count_seeds(SEED_TYPE_TO_EXTRACTION_FUNCTION['kmer7'](miRNA))
+    count_6mer = count_seeds(SEED_TYPE_TO_EXTRACTION_FUNCTION['kmer6'](miRNA))
+    
+    bulge_6mers = SEED_TYPE_TO_EXTRACTION_FUNCTION['kmer6_bulge'](miRNA)
+    mismatch_6mers = SEED_TYPE_TO_EXTRACTION_FUNCTION['kmer6_bulge_or_mismatch'](miRNA)
+    
+    bulge_6mers.sort(key=lambda s: len(s), reverse=True)
+    mismatch_6mers.sort(key=lambda s: len(s), reverse=True)
+    
+    count_6mer_bulge = count_seeds(bulge_6mers)
+    count_6mer_mismatch = count_seeds(mismatch_6mers)
+
+    return {
+        'kmer8_count': count_8mer,
+        'kmer7_count': count_7mer,
+        'kmer6_count': count_6mer,
+        'kmer6_bulge_count': count_6mer_bulge,
+        'kmer6_bulge_or_mismatch_count': count_6mer_mismatch,
+    }
+
+
+
+SEED_TYPE_TO_EXTRACTION_FUNCTION = {
     'kmer8': seeds_8mer,
     'kmer7': seeds_7mer,
     'kmer6': seeds_6mer,
@@ -114,41 +150,3 @@ SEED_TYPES = {
     'kmer6_bulge_or_mismatch': seeds_6mer_bulge_or_mismatch
 }
 
-
-def plot_prc_with_seeds(data, seed_types, methods, title=''):
-    fig, ax = plt.subplots(nrows = 1, ncols=1, figsize=(5, 5))
-    #for index, name in enumerate(data.keys()):
-
-    markers = {
-        'kmer8': 'x',
-        'kmer7': 'o',
-        'kmer6': 'v',
-        'kmer6_bulge': '*',
-        'kmer6_bulge_or_mismatch': '^'
-    }
-
-    colors = ['brown', 'blue', 'orange', 'pink', 'gray', 'black']
-
-    for seed_name in seed_types.keys():
-        marker = markers[seed_name]
-        for threshold in [1,2,3,4]:
-        # for threshold in [1,2,3,4,5,6]:
-            prec, rec, _, _ = precision_recall_fscore_support(data['label'].values, data[seed_name + "_count_" + str(threshold)].values, average='binary')
-
-            ax.plot(rec, prec, marker, color=colors[threshold - 1],  label=seed_name + "_count_" + str(threshold))
-
-    for meth in methods.keys():
-        PrecisionRecallDisplay.from_predictions(
-            methods[meth]['actual'], methods[meth]['predicted'], ax=ax,
-            label=str(meth)
-        )
-        
-    ax.set_xlabel('Recall')
-    ax.set_ylabel('Precision')
-    ax.set_title(title)
-
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-
-    plt.legend(loc='center left', bbox_to_anchor=(1.1, 0.5))
-    return fig, ax
