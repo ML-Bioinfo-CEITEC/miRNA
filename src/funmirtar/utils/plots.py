@@ -10,9 +10,12 @@ from sklearn.metrics import precision_recall_fscore_support, PrecisionRecallDisp
 
 
 def plot_multiple_cdfs_with_medians(
-    dataframes_for_top_preds=[], labels_for_top_preds=[], 
-    values_list_for_all_lfc=[], labels_for_all_flc=[], 
-    title_sufix='', num_of_top_preds=16
+    
+    dataframe_with_predictions = [],
+    columns_for_top_preds = [],
+    columns_for_all_lfc = [],
+    title_sufix='',
+    num_of_top_preds=16
 ):
     """
     Plots the Cumulative Density Function (CDF) of log2 fold change (LFC) values with median lines for multiple sets of data.
@@ -21,12 +24,13 @@ def plot_multiple_cdfs_with_medians(
     It is possible to plot only one group (top 16 or all LFC values) and leave the other empty.
 
     Parameters:
-    - dataframes_for_top_preds: List of DataFrames, each containing 'miRNA', predictions (denoted by label), and fold changes (denoted by 'fold_change'). Only top N predictions for each miRNA are picked and their LFC is plotted. 
-    - labels_for_top_preds: List of prediction labels, one label for each method
-    - values_list_for_all_lfc: List of arrays of LFC values, all values will be plotted
-    - labels_for_all_flc: List of labels_for_all_flc for values_list_for_all_lfc, one label for each LFC array
-    - title_sufix: To be used in plot title
-    - num_of_top_preds: Number of top predictions for each miRNA
+    @param dataframe_with_predictions: DataFrame with predictions. 
+    Required columns: 'miRNA', 'fold_change', and columns_for_top_preds and columns_for_all_lfc.
+    Column 'miRNA' contains miRNA names, 'fold_change' contains LFC values, and columns_for_top_preds and columns_for_all_lfc contain predictions.
+    @param columns_for_top_preds: List of column names with predictions where top N predictions are plotted
+    @param columns_for_all_lfc: List of column names with predictions where all LFC values are plotted
+    @param title_sufix: To be used in plot title
+    @param num_of_top_preds: Number of top predictions for each miRNA to be plotted
     """
     def plot_lines_with_median(predictions, label, color):
         # Compute the CDF
@@ -40,29 +44,28 @@ def plot_multiple_cdfs_with_medians(
         plt.plot([median_value, median_value], [0, 0.5], linestyle='--', color='black', label='_nolegend_')
         
     plt.figure(figsize=(8, 6))
-    # colors = ['#E69F00', '#56B4E9', '#009E73', '#F0E442', '#0072B2', '#D55E00', '#CC79A7']
-    colors = sns.color_palette("colorblind", len(values_list_for_all_lfc) + len(dataframes_for_top_preds))
+    colors = sns.color_palette("colorblind", len(columns_for_top_preds) + len(columns_for_all_lfc))
     
     # plot all LFCs
-    for lfc_values, label, color in zip(values_list_for_all_lfc, labels_for_all_flc, colors[:len(values_list_for_all_lfc)]):
-        plot_lines_with_median(lfc_values, label, color)
-        
-    # plot only top N LFCs per miRNA
-    for df, label, color in zip(
-        dataframes_for_top_preds, labels_for_top_preds, colors[len(values_list_for_all_lfc):]
-    ):
+    for id, column in enumerate(columns_for_all_lfc):
+        color = colors[id]
+        plot_lines_with_median(dataframe_with_predictions[column], column, color)
+
+    for id, column in enumerate(columns_for_top_preds):
+    
         top_predictions = []
         
         # Get top N predictions for each miRNA
-        grouped = df.groupby('miRNA')
-        for name, group in grouped:
-            top_number_of_preds = group.nsmallest(num_of_top_preds, label)
+        grouped = dataframe_with_predictions.groupby('miRNA')
+        for _, group in grouped:
+            top_number_of_preds = group.nsmallest(num_of_top_preds, column)
             top_predictions.append(top_number_of_preds['fold_change'])
         
         # Concatenate the top predictions into a single array
         top_predictions = pd.concat(top_predictions)
         #plot LFCs of top N predictions
-        plot_lines_with_median(top_predictions, label, color)
+        color = colors[id + len(columns_for_all_lfc)]
+        plot_lines_with_median(top_predictions, column, color)
     
     plt.xlim(-2, 2)
     plt.xlabel('Log2 Fold Change (LFC)')
@@ -77,6 +80,7 @@ def plot_multiple_cdfs_with_medians(
     plt.gca().xaxis.set_ticks_position('bottom')
     plt.grid(False)
     plt.show()
+
 
 
 def plot_correlation(y_true, y_pred, title_sufix):
