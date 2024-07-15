@@ -11,6 +11,33 @@ SEED_COUNTS = [1, 2, 3, 4, 5, 6]
 
 SEED_COUNT_COLUMNS = [f'{seed}_{count}' for seed in SEEDS_TO_COUNT for count in SEED_COUNTS]
 
+GLOBAL_FEATURES = [
+    'transcript_length',
+    'signal_binding_sites_count', 'signal_max', 'mean', 'std',
+    'median', 'iqr', 'peak_count', 'mean_crossings'
+]
+
+LOCAL_FEATURES_BASE = [
+    'site_distance_from_start',
+    'site_distance_from_end',
+    'relative_position_left',
+    'relative_position_right',
+    'signal_peak',
+    'signal_auc',
+    'signal_mean',
+    'before_au_content',
+    'before_cg_content',
+    'after_au_content',
+    'after_cg_content',
+]
+
+NUM_BINDING_SITES = 10
+
+LOCAL_FEATURES = [f'{local_feature}_{i}' for i in range(NUM_BINDING_SITES) for local_feature in LOCAL_FEATURES_BASE]
+
+CLASSIFICATION_COLUMNS = ['refseq_mrna', 'miRNA', 'label']
+REGRESSION_COLUMNS = ['refseq_mrna', 'miRNA', 'fold_change']
+
 TARGETSCAN_COLUMN_TO_SEQUENCE = {
     'hsa-miR-16-5p': 'TAGCAGCACGTAAATATTGGCG', # https://mirbase.org/mature/MIMAT0000069
     'hsa-miR-106b-5p': 'TAAAGTGCTGACAGTGCAGAT', # https://mirbase.org/mature/MIMAT0000680
