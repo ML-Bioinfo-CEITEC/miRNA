@@ -14,11 +14,13 @@ else
     pip install gdown
 fi
 
+# Create folder structure
+mkdir -p "data/GRCh37.p13 hg19/UCSC"
 
 # UCSC id map
 # https://drive.google.com/file/d/1geMB7JMUkkDwtwulCw01ruSLqMBEdXiT/view?usp=sharing
-gdown "1geMB7JMUkkDwtwulCw01ruSLqMBEdXiT&confirm=t" --output "GRCh37.p13 hg19/UCSC/id_map"
+gdown "1geMB7JMUkkDwtwulCw01ruSLqMBEdXiT&confirm=t" --output "data/GRCh37.p13 hg19/UCSC/id_map"
 
 # utr_sequences_hg19
 # https://drive.google.com/file/d/11PFjBLQJ-rUF8nioh7pd1MzDs1fsSCPG/view?usp=sharing
-gdown "11PFjBLQJ-rUF8nioh7pd1MzDs1fsSCPG&confirm=t" --output "GRCh37.p13 hg19/utr_sequences_hg19.txt"
+gdown "11PFjBLQJ-rUF8nioh7pd1MzDs1fsSCPG&confirm=t" --output "data/GRCh37.p13 hg19/utr_sequences_hg19.txt"
