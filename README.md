@@ -7,7 +7,7 @@ Create a conda env by running ```conda create --name YOUR_ENVIRONMENT_NAME --fil
 Activate an existing environment by ```conda activate YOUR_ENVIRONMENT_NAME```
 
 ### Download the data
-Run ```./download_data_for_ML.sh``` which installs the ```gdown``` package (if not installed yet) through pip and downloads the datasets.
+Run ```./data/download_data_for_ML.sh``` which installs the ```gdown``` package (if not installed yet) through pip and downloads the datasets.
 
 Installing the ```gdown``` through pip is temporary until we fix installing through conda 
 
