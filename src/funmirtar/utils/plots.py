@@ -10,7 +10,6 @@ from sklearn.metrics import precision_recall_fscore_support, PrecisionRecallDisp
 
 
 def plot_multiple_cdfs_with_medians(
-    
     dataframe_with_predictions = [],
     columns_for_top_preds = [],
     columns_for_all_lfc = [],
