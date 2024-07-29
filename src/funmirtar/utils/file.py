@@ -1,5 +1,8 @@
 import os
+import re
+import pandas as pd
 from pathlib import Path
+from functools import reduce
 
 
 def make_dir_with_parents(path):
@@ -43,3 +46,30 @@ def get_file_path_ending(file_path, endings_list = ['.test','.train','']):
             return file_ending_with_format
 
     raise ValueError("The file path does not end with a recognized pattern.")
+    
+    
+def extract_file_name_from_path(original):
+    # Remove the prefix path up to and including the last "/"
+    prefix_removed = re.sub(r'^.*/', '', original)
+    return prefix_removed
+
+
+def extract_file_ending(original):
+    # Remove the suffix "train", "test", and always ".pkl"
+    suffix_removed = re.sub(r'(.train|.test)?\.pkl$', '', original)
+    return suffix_removed
+
+
+def merge_dataframes(dataframes, merge_on_columns):
+    return reduce(
+        lambda x, y: pd.merge(x, y, on = merge_on_columns), dataframes
+    )
+
+
+def load_and_merge_pickle_dataframes(pickle_paths, merge_on_columns):
+    dataframes = []
+    for path in pickle_paths:
+        df = pd.read_pickle(path)
+        dataframes.append(df)
+    merged_df = merge_dataframes(dataframes, merge_on_columns)
+    return merged_df
