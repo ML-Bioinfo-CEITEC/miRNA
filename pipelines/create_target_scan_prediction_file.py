@@ -7,7 +7,7 @@ from funmirtar.utils.file import make_dir_with_parents, get_file_path_ending
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Add local features based on the given local-features config and dataset paths.')
+    parser = argparse.ArgumentParser(description='Extract targetscan predictions into a dataframe file out of a given dataframe.')
     parser.add_argument(
         '--data_file_path',
         type=str, 
@@ -30,7 +30,13 @@ def main():
         '--data_file_prediction_column',
         type=str, 
         default= 'weighted context++ score percentile',
-        help='A column of the dataframe found at the data_file_path that will be considered classification prediction.'
+        help='A column of the dataframe found at the data_file_path that will be used for classification prediction.'
+    )
+    parser.add_argument(
+        '--result_prediction_column',
+        type=str, 
+        default= 'weighted context++ score percentile (filled NaNs)',
+        help='A new column name that will be used to store classification prediction.'
     )
     
     args = parser.parse_args()
@@ -42,13 +48,14 @@ def main():
     OUT_FULL_PATH = OUT_FOLDER_PATH + OUT_FILE_PATH + get_file_path_ending(IN_PATH) 
     
     PREDICTION_COLUMN = args.data_file_prediction_column
+    EXTRACTED_PREDICTION_COLUMN = args.result_prediction_column
 
     data_df = pd.read_pickle(IN_PATH)
-    data_df[PREDICTION_COLUMN + ' (filled NaNs)'] = data_df[PREDICTION_COLUMN].fillna(0,inplace=False)
+    data_df[EXTRACTED_PREDICTION_COLUMN] = data_df[PREDICTION_COLUMN].fillna(0,inplace=False)
     
     out_columns=[]
     out_columns.extend(CLASSIFICATION_COLUMNS)
-    out_columns.extend([PREDICTION_COLUMN])    
+    out_columns.extend([EXTRACTED_PREDICTION_COLUMN])    
 
     make_dir_with_parents(OUT_FOLDER_PATH)
     
