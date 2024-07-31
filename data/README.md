@@ -1,3 +1,8 @@
+# Scripts
+
+### download_data_for_preprocessing.py
+This script downloads the data necessary for preprocessing before scanning the transcripts, the data for matching RefSeq IDs to ENSEMBL, and the data for covering the mirna_fcs.csv file with 3' UTR sequences. Some files used in the mentioned processes that are small enough are already stored on github.
+
 # Data sources
 
 ### Predicted Targets context++ scores (default predictions)
