@@ -41,6 +41,7 @@ def main():
 
     make_dir_with_parents(OUT_FOLDER_PATH)
 
+    print(f"Seed predictions resulting file is at {OUT_FULL_PATH}")
     data_df[OUT_COLUMNS].to_pickle(OUT_FULL_PATH)
     
     

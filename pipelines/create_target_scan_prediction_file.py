@@ -59,6 +59,7 @@ def main():
 
     make_dir_with_parents(OUT_FOLDER_PATH)
     
+    print(f"TargetScan resulting file is at {OUT_FULL_PATH}")
     data_df[out_columns].to_pickle(OUT_FULL_PATH)
     
     

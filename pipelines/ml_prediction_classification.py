@@ -183,6 +183,7 @@ def main():
     feature_names = x_train.columns
     plot_feature_importance(feature_names, feature_importances, 40, OUT_FOLDER_PATH + 'features')
 
+    print(f"Prediction results are at train: {OUT_PATH_TRAIN}, test: {OUT_PATH_TEST}")
     data_train[OUT_COLUMNS].to_pickle(OUT_PATH_TRAIN)
     data_test[OUT_COLUMNS].to_pickle(OUT_PATH_TEST)
 

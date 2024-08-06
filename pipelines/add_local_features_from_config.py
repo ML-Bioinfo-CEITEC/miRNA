@@ -2,9 +2,17 @@ import argparse
 import pandas as pd
 from pathlib import Path
 
-from funmirtar.models.local_features import get_binding_site_features
+from funmirtar.models.local_features import get_binding_site_features_from_config
 from funmirtar.models.global_features import get_only_positive_conservation
+from funmirtar.models.local_features_config import load_user_config
 from funmirtar.utils.file import insert_text_before_the_end_of_path
+
+
+# def load_user_config(config_path):
+#     spec = importlib.util.spec_from_file_location("config", config_path)
+#     config = importlib.util.module_from_spec(spec)
+#     spec.loader.exec_module(config)
+#     return config.USER_CONFIG
 
 
 def main():
@@ -24,8 +32,14 @@ def main():
     parser.add_argument(
         '--output_sufix',
         type=str, 
-        default= '.local_features',
+        default= '.user_local_features',
         help='The naming suffix that will be added to the end of the dataset file.'
+    )
+    parser.add_argument(
+        '--config_path', 
+        type=str, 
+        default="",
+        help='Path to the file containing the dictionary config for local feature extraction.'
     )
 
     args = parser.parse_args()
@@ -35,11 +49,15 @@ def main():
     INPUT_PATH = FOLDER_PATH + args.data_file
     
     OUTPUT_PATH = insert_text_before_the_end_of_path(INPUT_PATH, OUTPUT_SUFIX)
+    
+    CONFIG_PATH = args.config_path
+    
+    config = load_user_config(CONFIG_PATH)
 
     data_df = pd.read_pickle(INPUT_PATH)
 
-    data_df['conservation_phylo'] = data_df.conservation_phylo.map(lambda cons: get_only_positive_conservation(cons))
-    features = get_binding_site_features(data_df)
+    # data_df['conservation_phylo'] = data_df.conservation_phylo.map(lambda cons: get_only_positive_conservation(cons))
+    features = get_binding_site_features_from_config(data_df, config)
     data_df = pd.concat([data_df, pd.DataFrame(features)], axis=1)
 
     print(f"Extracted local features resulting file is at {OUTPUT_PATH}")

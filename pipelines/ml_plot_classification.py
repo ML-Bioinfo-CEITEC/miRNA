@@ -104,6 +104,7 @@ def main():
         title='PR-curve on train dataset',
         path=out_folder_path + '/train'
     )
+    print(f"Plots are at {out_folder_path}")
 
 
 if __name__ == "__main__":
