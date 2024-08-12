@@ -57,6 +57,7 @@ def filter_highest_islands(signal, binding_sites_count=10, min_length=6, max_len
     return filtered_signal, top_islands
 
 
+# TODO rewrite all existing feature extractions into functions for a config style format
 def analyze_binding_sites(signal, sequence, conservation, binding_sites, neighborhood=50):
     """
     Analyzes the top binding sites of miRNA binding sites and extracts various features.
@@ -164,6 +165,74 @@ def get_binding_site_features(df):
             max_overlap=0.2,
         )
         features = analyze_binding_sites(signal, sequence, conservation, top_islands_list)
+        return features
+
+    features_dicts = [get_local_features(row) for idx,row in df.iterrows()]
+
+    return features_dicts
+
+
+def analyze_binding_sites_from_config(signal, sequence, conservation, binding_sites, miRNA_seq, config, neighborhood=50):
+    features_dict = {}
+
+    for i, (_, start, end) in enumerate(binding_sites):
+        # Binding site features
+        site_distance_from_start = start
+        site_distance_from_end = len(signal) - end
+        
+        # Determine the closest binding sites on the left and right
+        left_sites = [(s, e) for _, s, e in binding_sites if s < start]
+        right_sites = [(s, e) for _, s, e in binding_sites if s > end]
+
+        if left_sites:
+            closest_left_site_end = max(left_sites, key=lambda x: x[1])[1]
+            relative_position_left = start - closest_left_site_end
+        else:
+            relative_position_left = start
+
+        if right_sites:
+            closest_right_site_start = min(right_sites, key=lambda x: x[0])[0]
+            relative_position_right = closest_right_site_start - end
+        else:
+            relative_position_right = len(signal) - end
+        
+        # Neighborhood features
+        neighborhood_start = max(start - neighborhood, 0)
+        neighborhood_end = min(end + neighborhood, len(signal))
+        
+        for extraction_function_name, extraction_function in config.items():
+            features_dict[f'{extraction_function_name}_{i}'] = extraction_function(
+                miRNA_seq,
+                signal, 
+                sequence, 
+                conservation, 
+                start, end, 
+                neighborhood_start, neighborhood_end
+            )
+
+    return features_dict
+
+
+def get_binding_site_features_from_config(df, config):
+
+    def get_local_features(row):
+        signal = row['signal']
+        sequence = row['sequence']
+        conservation = row['conservation_phylo']
+        miRNA_seq = row['miRNA_seq']
+        
+        if len(signal) == 0 or len(conservation) == 0:
+            return {}
+        
+        _, top_islands_list = filter_highest_islands(
+            signal, 
+            binding_sites_count=10, 
+            min_length=14,
+            max_length=14,
+            neighborhood=50, 
+            max_overlap=0.2,
+        )
+        features = analyze_binding_sites_from_config(signal, sequence, conservation, top_islands_list, miRNA_seq, config)
         return features
 
     features_dicts = [get_local_features(row) for idx,row in df.iterrows()]
