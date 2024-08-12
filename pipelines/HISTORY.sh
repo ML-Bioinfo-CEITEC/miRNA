@@ -35,7 +35,7 @@
 
 
 # Run on 7.8.
-./evaluate_new_feature.sh \
+./train_and_evaluate_models.sh \
 --train_dataset "../data/preprocessed_for_ml/3utr.sequences.refseq_id.mirna_fc.seed_cls.sequence.signal.conservation.seed_cls.ts_preds.local_features.train.pkl" \
 --test_dataset "../data/preprocessed_for_ml/3utr.sequences.refseq_id.mirna_fc.seed_cls.sequence.signal.conservation.seed_cls.ts_preds.local_features.test.pkl" \
 --run_output_sufix ".user_local_features" \
