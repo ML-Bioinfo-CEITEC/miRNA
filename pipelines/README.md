@@ -20,6 +20,8 @@ Will be added later. This produces the final train/test datasets for the 7miRs H
 ```extract_local_features.sh```
 The script takes a config containing extraction functions and the path of the train and test dataset. It extracts the features and adds them to the datasets. It saves the updated datasets as new files.
 
+See examples of how to run the script in ```/pipelines/HISTORY.sh```
+
 The following arguments are expected to run the local feature extraction for a new local feature:
 
 ```CONFIG_PATH```
@@ -35,6 +37,8 @@ Given by the CONFIG_PATH parameter. In this config, you include the functions th
 ```train_and_evaluate_models.sh```
 The script takes the paths of the train and test dataset. It trains models, uses the trained models to make predictions, and saves the predictions to the ```/data/predictions``` folder.
 The plotting part of the script takes the predictions and compares them to TS or other methods and feature sets and outputs comparison plots to ```/plots``` folder.
+
+See examples of how to run the script in ```/pipelines/HISTORY.sh```
 
 The following arguments are expected to run the script:
 
