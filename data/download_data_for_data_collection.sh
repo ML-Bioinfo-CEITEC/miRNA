@@ -18,7 +18,9 @@ download_from_gdrive() {
     local dest_path=$2
 
     echo "Downloading $dest_path..."
-    wget --no-check-certificate "https://drive.google.com/uc?export=download&id=$file_id" -O "$dest_path"
+    # wget --no-check-certificate "https://drive.google.com/uc?export=download&id=$file_id" -O "$dest_path"
+    # wget --no-check-certificate "https://drive.google.com/uc?export=download&id=${file_id}&confirm=t" -O "$dest_path"
+    gdown "${file_id}&confirm=t" --output "$dest_path"
 }
 
 # Download files from Google Drive (replace with actual Google Drive file IDs)
