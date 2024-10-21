@@ -17,9 +17,10 @@ def get_conservation(bw_file, chrom, ensembl_start, ensembl_end):
 
 def main():
     parser = argparse.ArgumentParser(description='Process conservation scores for UTRs.')
-    parser.add_argument('--conservation_path', required=True, help='Path to the conservation BigWig file')
-    parser.add_argument('--utr_df_mirna_fc_chr_path', required=True, help='Path to the input UTR dataframe pickle')
-    parser.add_argument('--utr_df_mirna_fc_chr_conservation_path', required=True, help='Path to the output UTR dataframe pickle with conservation data')
+    parser.add_argument('--conservation_path', default='../../data/conservation/hg19.100way.phyloP100way.bw', help='Path to the conservation BigWig file')
+    parser.add_argument('--utr_df_mirna_fc_chr_path', default='../../data/processed/GRCh37.p13 hg19/UCSC/3utr.sequences.refseq_id.mirna_fc.pkl', help='Path to the input UTR dataframe pickle')
+    parser.add_argument('--utr_df_mirna_fc_chr_conservation_path', default='../../data/conservation/hg19/UCSC/3utr.sequences.refseq_id.mirna_fc.chr.conservation.pkl', help='Path to the output UTR dataframe pickle with conservation data')
+
 
     args = parser.parse_args()
 
